@@ -1,16 +1,26 @@
 from fastapi import FastAPI, Form
+from fastapi.middleware.cors import CORSMiddleware
 import aiosmtplib
 from email.mime.text import MIMEText
 import os
 
 app = FastAPI()
 
-# Environment variables for security (Set these in your hosting platform)
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")  # Default to Gmail
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://drknchaturvedi.com"],  # Only allow your website
+    allow_credentials=True,
+    allow_methods=["POST"],
+    allow_headers=["*"],
+)
+
+# Load environment variables
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-EMAIL_SENDER = os.getenv("EMAIL_SENDER", "your-email@gmail.com")  # Your email
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "your-app-password")  # Use an App Password!
-EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER", "your-email@gmail.com")  # Destination inbox
+EMAIL_SENDER = os.getenv("EMAIL_SENDER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 
 @app.post("/send-message/")
 async def send_message(
@@ -19,7 +29,6 @@ async def send_message(
     message: str = Form(...)
 ):
     """Handles form submissions and sends an email."""
-    
     email_content = f"New Contact Form Submission\n\nName: {name}\nEmail: {email}\nMessage:\n{message}"
     msg = MIMEText(email_content)
     msg["From"] = EMAIL_SENDER
